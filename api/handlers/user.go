@@ -24,6 +24,7 @@ type UpdateUserRequest struct {
 	FullName   string `json:"full_name"`
 	Role       string `json:"role"`
 	DingTalkID string `json:"ding_talk_id"`
+	Password   string `json:"password"` // 可选，如果提供则更新密码
 }
 
 // UpdatePasswordRequest 更新密码请求
@@ -106,6 +107,7 @@ func UpdateUser(c *gin.Context) {
 		return
 	}
 
+	// 直接更新字段
 	if req.FullName != "" {
 		user.FullName = req.FullName
 	}
@@ -117,8 +119,15 @@ func UpdateUser(c *gin.Context) {
 		}
 		user.Role = role
 	}
-	if req.DingTalkID != "" {
-		user.DingTalkID = req.DingTalkID
+	// 直接赋值，允许清空钉钉ID
+	user.DingTalkID = req.DingTalkID
+
+	// 如果提供了密码，则更新密码
+	if req.Password != "" {
+		if err := models.UpdatePassword(user.ID, req.Password); err != nil {
+			utils.ResponseError(c, http.StatusInternalServerError, "更新密码失败")
+			return
+		}
 	}
 
 	if err := models.UpdateUser(user); err != nil {
