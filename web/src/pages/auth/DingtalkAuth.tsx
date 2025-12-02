@@ -93,10 +93,17 @@ const DingtalkAuth = () => {
 
     // 如果在钉钉客户端中
     if (isInDingTalk) {
-      // 检查是否配置了钉钉企业ID
+      // 检查是否配置了钉钉企业ID，如果没有则尝试使用SSO方式
       if (!dingtalk_corp_id) {
-        setError("未配置钉钉登录");
-        setLoading(false);
+        // 尝试使用SSO方式
+        if (!dingtalk_client_id) {
+          setError("未配置钉钉登录");
+          setLoading(false);
+          return;
+        }
+        // 使用SSO redirect方式
+        const ssoUrl = `/api/public/dingtalk/sso_redirect?method=sso_get_token&redirect=/login`;
+        window.location.href = ssoUrl;
         return;
       }
 

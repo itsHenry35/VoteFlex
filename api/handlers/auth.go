@@ -130,17 +130,25 @@ func DingTalkSSORedirect(c *gin.Context) {
 	}
 
 	// 构建回调URL
-	scheme := "https"
-	if c.Request.TLS == nil {
-		// 检查X-Forwarded-Proto头
-		if proto := c.GetHeader("X-Forwarded-Proto"); proto != "" {
-			scheme = proto
-		} else {
-			scheme = "http"
+	var baseURL string
+	if cfg.Website.Domain != "" {
+		// 如果配置了域名，使用配置的域名
+		baseURL = cfg.Website.Domain
+	} else {
+		// 否则使用当前请求的域名
+		scheme := "https"
+		if c.Request.TLS == nil {
+			// 检查X-Forwarded-Proto头
+			if proto := c.GetHeader("X-Forwarded-Proto"); proto != "" {
+				scheme = proto
+			} else {
+				scheme = "http"
+			}
 		}
+		baseURL = fmt.Sprintf("%s://%s", scheme, c.Request.Host)
 	}
-	redirectURI := fmt.Sprintf("%s://%s/api/public/dingtalk/sso_callback?method=%s&redirect=%s",
-		scheme, c.Request.Host, method, url.QueryEscape(redirectPath))
+	redirectURI := fmt.Sprintf("%s/api/public/dingtalk/sso_callback?method=%s&redirect=%s",
+		baseURL, method, url.QueryEscape(redirectPath))
 
 	// 构建钉钉OAuth2授权URL
 	urlValues := url.Values{}

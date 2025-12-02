@@ -205,12 +205,20 @@ const VotePage: React.FC = () => {
   const handleDingtalkLogin = () => {
     // 检查是否在钉钉客户端中
     if (isInDingTalk) {
-      // 在钉钉客户端中使用免登
+      // 在钉钉客户端中使用免登，如果没有配置CorpID则尝试SSO方式
       if (!dingtalk_corp_id) {
-        Modal.error({
-          title: "钉钉登录未配置",
-          content: "请联系管理员配置钉钉登录",
-        });
+        // 尝试使用SSO方式
+        if (!dingtalk_client_id) {
+          Modal.error({
+            title: "钉钉登录未配置",
+            content: "请联系管理员配置钉钉登录",
+          });
+          return;
+        }
+        // 使用SSO redirect方式
+        const currentPath = window.location.pathname;
+        const ssoUrl = `/api/public/dingtalk/sso_redirect?method=get_vote_token&redirect=${encodeURIComponent(currentPath)}`;
+        window.location.href = ssoUrl;
         return;
       }
 
